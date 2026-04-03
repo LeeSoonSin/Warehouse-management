@@ -3,109 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>모바일 창고 관리</title>
+    <title>창고 관리 Pro</title>
     <style>
-        :root { --primary: #3498db; --bg: #f8f9fa; --border: #dee2e6; }
-        body { font-family: 'Apple SD Gothic Neo', sans-serif; background-color: var(--bg); margin: 0; padding-bottom: 50px; }
+        :root { --primary: #2c3e50; --highlight: #ffeb3b; --border: #ccc; }
+        body { font-family: sans-serif; margin: 0; background: #f0f0f0; font-size: 12px; }
         
-        /* 상단 고정 검색바 */
-        .header { position: sticky; top: 0; background: white; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 100; }
-        .search-box { width: 100%; padding: 12px; border: 2px solid var(--primary); border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        /* 상단 검색바 고정 및 슬림화 */
+        .header { position: sticky; top: 0; background: #fff; padding: 10px; box-shadow: 0 1px 5px rgba(0,0,0,0.2); z-index: 100; }
+        .search-box { width: 100%; padding: 8px; border: 1px solid var(--primary); border-radius: 4px; box-sizing: border-box; font-size: 14px; }
 
-        .container { padding: 15px; }
-        .shelf-section { margin-bottom: 30px; }
-        .shelf-name { font-size: 20px; font-weight: bold; margin-bottom: 10px; color: #2c3e50; border-bottom: 2px solid #2c3e50; padding-bottom: 5px;}
+        .container { padding: 5px; }
+        .shelf-title { background: var(--primary); color: white; padding: 5px 10px; margin-top: 10px; border-radius: 3px 3px 0 0; font-weight: bold; }
 
-        /* 모바일 격자: 선반 느낌을 살린 세로형 배치 */
-        .grid { display: grid; gap: 8px; }
-        .k-grid { grid-template-columns: repeat(2, 1fr); } /* K회사는 2열씩 보기 */
-        .a-grid { grid-template-columns: repeat(2, 1fr); }
+        /* 핵심: 가로 배열 유지 */
+        .grid { display: grid; background: var(--border); gap: 1px; border: 1px solid var(--border); margin-bottom: 15px; }
+        .k-grid { grid-template-columns: repeat(5, 1fr); } /* K회사 5열 고정 */
+        .a-grid { grid-template-columns: repeat(4, 1fr); } /* A회사 4열 고정 */
 
-        .cell { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .cell-title { font-size: 12px; color: #7f8c8d; margin-bottom: 8px; display: block; }
-        
-        /* 한 칸당 4개의 입력줄 */
-        .input-group { display: flex; flex-direction: column; gap: 5px; }
-        .item-input { border: none; border-bottom: 1px solid #eee; padding: 5px 0; font-size: 14px; outline: none; width: 100%; }
-        .item-input:focus { border-bottom-color: var(--primary); background: #f0f7ff; }
+        .cell { background: white; padding: 4px 2px; display: flex; flex-direction: column; }
+        .cell-label { font-size: 9px; color: #999; text-align: center; margin-bottom: 2px; transform: scale(0.9); }
 
-        /* 특수 구역 (위층, 바닥) */
-        .special-zone { grid-column: 1 / -1; background: #ebf5fb; border: 1px dashed var(--primary); }
+        /* 입력창 슬림화 */
+        .item-input { 
+            width: 100%; border: none; border-bottom: 1px solid #f0f0f0; 
+            padding: 2px 0; font-size: 11px; outline: none; text-align: center;
+        }
+        .item-input:focus { background: #e3f2fd; }
+        .item-input::placeholder { color: #eee; }
 
-        /* 검색 결과 강조 */
-        .found { background-color: #fff9c4 !important; border: 2px solid #f1c40f !important; transform: scale(1.02); transition: 0.2s; }
+        /* 특수 구역 (위층, 바닥) - 가로 전체 차지 */
+        .special-zone { grid-column: 1 / -1; background: #e9ecef; }
+        .special-zone .item-input { background: #e9ecef; border-bottom: 1px solid #ddd; }
+
+        /* 검색 결과 하이라이트 */
+        .found { background-color: var(--highlight) !important; border: 1px solid #fbc02d; box-shadow: inset 0 0 5px rgba(0,0,0,0.1); }
+        .found input { background-color: var(--highlight); }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <input type="text" id="search" class="search-box" placeholder="🔍 물품명 검색 (예: 밸브)" oninput="handleSearch()">
+    <input type="text" id="search" class="search-box" placeholder="물품 검색 (예: 밸브)" oninput="handleSearch()">
 </div>
 
 <div class="container">
-    <!-- K회사 -->
-    <div class="shelf-section">
-        <div class="shelf-name">🏢 K회사 선반</div>
-        <div id="k-container" class="grid k-grid"></div>
-    </div>
+    <div class="shelf-title">K회사 (5열 시스템)</div>
+    <div id="k-container" class="grid k-grid"></div>
 
-    <!-- A회사 -->
-    <div class="shelf-section">
-        <div class="shelf-name">🏢 A회사 선반</div>
-        <div id="a-container" class="grid a-grid"></div>
-    </div>
+    <div class="shelf-title">A회사 (4열 시스템)</div>
+    <div id="a-container" class="grid a-grid"></div>
 </div>
 
 <script>
-    const K_CONFIG = { id: 'k', rows: 3, cols: 5, label: 'K' };
-    const A_CONFIG = { id: 'a', rows: 3, cols: 4, label: 'A' };
+    const K_CONFIG = { id: 'k', rows: 3, cols: 5 };
+    const A_CONFIG = { id: 'a', rows: 3, cols: 4 };
 
     function initShelf(config) {
         const target = document.getElementById(`${config.id}-container`);
         
-        // 1. 맨 위층
-        target.appendChild(createCell('맨 위층', `${config.id}-top`, true));
+        // 1. 위층
+        target.appendChild(createCell('TOP', `${config.id}-top`, true));
 
-        // 2. 본체 (행/열 순회)
+        // 2. 단별 열 배치
         for(let r=1; r<=config.rows; r++) {
             for(let c=1; c<=config.cols; c++) {
-                target.appendChild(createCell(`${r}단-${c}열`, `${config.id}-${r}-${c}`));
+                target.appendChild(createCell(`${r}-${c}`, `${config.id}-${r}-${c}`));
             }
         }
 
         // 3. 바닥
-        target.appendChild(createCell('바닥', `${config.id}-bottom`, true));
+        target.appendChild(createCell('BOTTOM', `${config.id}-bottom`, true));
     }
 
     function createCell(label, posId, isSpecial = false) {
         const div = document.createElement('div');
         div.className = `cell ${isSpecial ? 'special-zone' : ''}`;
-        div.innerHTML = `<span class="cell-title">${label}</span><div class="input-group"></div>`;
+        div.innerHTML = `<span class="cell-label">${label}</span>`;
         
-        const group = div.querySelector('.input-group');
         for(let i=1; i<=4; i++) {
             const input = document.createElement('input');
             input.className = 'item-input';
-            input.placeholder = '---';
+            input.placeholder = '.';
             input.dataset.key = `${posId}-${i}`;
-            input.oninput = saveToLocal; // 글자 칠 때마다 바로 저장
-            group.appendChild(input);
+            input.oninput = saveToLocal;
+            div.appendChild(input);
         }
         return div;
     }
 
-    // 데이터 저장
     function saveToLocal() {
         const data = {};
         document.querySelectorAll('.item-input').forEach(el => {
             if(el.value) data[el.dataset.key] = el.value;
         });
-        localStorage.setItem('mobile_shelf_data', JSON.stringify(data));
+        localStorage.setItem('warehouse_v2', JSON.stringify(data));
     }
 
-    // 데이터 불러오기
     function loadData() {
-        const raw = localStorage.getItem('mobile_shelf_data');
+        const raw = localStorage.getItem('warehouse_v2');
         if(!raw) return;
         const data = JSON.parse(raw);
         document.querySelectorAll('.item-input').forEach(el => {
@@ -113,13 +108,10 @@
         });
     }
 
-    // 검색 (대소문자 구분 없음)
     function handleSearch() {
         const word = document.getElementById('search').value.trim().toLowerCase();
         document.querySelectorAll('.cell').forEach(c => c.classList.remove('found'));
-
         if(!word) return;
-
         document.querySelectorAll('.item-input').forEach(el => {
             if(el.value.toLowerCase().includes(word)) {
                 el.closest('.cell').classList.add('found');
@@ -127,7 +119,6 @@
         });
     }
 
-    // 실행
     initShelf(K_CONFIG);
     initShelf(A_CONFIG);
     loadData();
