@@ -3,54 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>창고 관리 Pro</title>
+    <title>창고 관리 시스템 v3</title>
     <style>
-        :root { --primary: #2c3e50; --highlight: #ffeb3b; --border: #ccc; }
+        :root { --primary: #2c3e50; --top-bg: #e8f5e9; --bot-bg: #fff3e0; --highlight: #ffeb3b; --border: #ccc; }
         body { font-family: sans-serif; margin: 0; background: #f0f0f0; font-size: 12px; }
         
-        /* 상단 검색바 고정 및 슬림화 */
+        /* 상단 검색바 */
         .header { position: sticky; top: 0; background: #fff; padding: 10px; box-shadow: 0 1px 5px rgba(0,0,0,0.2); z-index: 100; }
-        .search-box { width: 100%; padding: 8px; border: 1px solid var(--primary); border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        .search-box { width: 100%; padding: 10px; border: 2px solid var(--primary); border-radius: 4px; box-sizing: border-box; font-size: 14px; }
 
         .container { padding: 5px; }
-        .shelf-title { background: var(--primary); color: white; padding: 5px 10px; margin-top: 10px; border-radius: 3px 3px 0 0; font-weight: bold; }
+        .shelf-title { background: var(--primary); color: white; padding: 6px 10px; margin-top: 15px; border-radius: 4px 4px 0 0; font-weight: bold; font-size: 13px; }
 
-        /* 핵심: 가로 배열 유지 */
-        .grid { display: grid; background: var(--border); gap: 1px; border: 1px solid var(--border); margin-bottom: 15px; }
-        .k-grid { grid-template-columns: repeat(5, 1fr); } /* K회사 5열 고정 */
-        .a-grid { grid-template-columns: repeat(4, 1fr); } /* A회사 4열 고정 */
+        /* 그리드 설정 */
+        .grid { display: grid; background: var(--border); gap: 1px; border: 1px solid var(--border); margin-bottom: 5px; }
+        .k-grid { grid-template-columns: repeat(5, 1fr); } 
+        .a-grid { grid-template-columns: repeat(4, 1fr); }
 
-        .cell { background: white; padding: 4px 2px; display: flex; flex-direction: column; }
-        .cell-label { font-size: 9px; color: #999; text-align: center; margin-bottom: 2px; transform: scale(0.9); }
+        .cell { background: white; padding: 4px 1px; display: flex; flex-direction: column; min-height: 80px; }
+        .cell-label { font-size: 9px; color: #666; text-align: center; margin-bottom: 3px; font-weight: bold; background: #f8f9fa; }
 
-        /* 입력창 슬림화 */
+        /* 입력창 */
         .item-input { 
             width: 100%; border: none; border-bottom: 1px solid #f0f0f0; 
-            padding: 2px 0; font-size: 11px; outline: none; text-align: center;
+            padding: 3px 0; font-size: 11px; outline: none; text-align: center; background: transparent;
         }
-        .item-input:focus { background: #e3f2fd; }
+        .item-input:focus { background: #fff; box-shadow: inset 0 0 2px var(--primary); }
         .item-input::placeholder { color: #eee; }
 
-        /* 특수 구역 (위층, 바닥) - 가로 전체 차지 */
-        .special-zone { grid-column: 1 / -1; background: #e9ecef; }
-        .special-zone .item-input { background: #e9ecef; border-bottom: 1px solid #ddd; }
+        /* 구역별 색상 구분 */
+        .zone-top { background-color: var(--top-bg) !important; } /* 맨 위층: 연녹색 */
+        .zone-bot { background-color: var(--bot-bg) !important; } /* 바닥: 연주황색 */
 
-        /* 검색 결과 하이라이트 */
-        .found { background-color: var(--highlight) !important; border: 1px solid #fbc02d; box-shadow: inset 0 0 5px rgba(0,0,0,0.1); }
-        .found input { background-color: var(--highlight); }
+        /* 검색 하이라이트 */
+        .found { background-color: var(--highlight) !important; border: 1px solid #fbc02d; z-index: 1; }
+        .found input { font-weight: bold; color: #000; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <input type="text" id="search" class="search-box" placeholder="물품 검색 (예: 밸브)" oninput="handleSearch()">
+    <input type="text" id="search" class="search-box" placeholder="🔍 물품 검색 (예: 레귤레이터)" oninput="handleSearch()">
 </div>
 
 <div class="container">
-    <div class="shelf-title">K회사 (5열 시스템)</div>
+    <!-- K회사 -->
+    <div class="shelf-title">K회사 선반 (5열)</div>
     <div id="k-container" class="grid k-grid"></div>
 
-    <div class="shelf-title">A회사 (4열 시스템)</div>
+    <!-- A회사 -->
+    <div class="shelf-title) ">A회사 선반 (4열)</div>
     <div id="a-container" class="grid a-grid"></div>
 </div>
 
@@ -61,23 +63,27 @@
     function initShelf(config) {
         const target = document.getElementById(`${config.id}-container`);
         
-        // 1. 위층
-        target.appendChild(createCell('TOP', `${config.id}-top`, true));
+        // 1. 맨 위층 (TOP) - 열 개수만큼 생성
+        for(let c=1; c<=config.cols; c++) {
+            target.appendChild(createCell(`T-${c}`, `${config.id}-top-${c}`, 'zone-top'));
+        }
 
-        // 2. 단별 열 배치
+        // 2. 중간 선반 (1~3단)
         for(let r=1; r<=config.rows; r++) {
             for(let c=1; c<=config.cols; c++) {
                 target.appendChild(createCell(`${r}-${c}`, `${config.id}-${r}-${c}`));
             }
         }
 
-        // 3. 바닥
-        target.appendChild(createCell('BOTTOM', `${config.id}-bottom`, true));
+        // 3. 바닥 (BOTTOM) - 열 개수만큼 생성
+        for(let c=1; c<=config.cols; c++) {
+            target.appendChild(createCell(`B-${c}`, `${config.id}-bot-${c}`, 'zone-bot'));
+        }
     }
 
-    function createCell(label, posId, isSpecial = false) {
+    function createCell(label, posId, extraClass = '') {
         const div = document.createElement('div');
-        div.className = `cell ${isSpecial ? 'special-zone' : ''}`;
+        div.className = `cell ${extraClass}`;
         div.innerHTML = `<span class="cell-label">${label}</span>`;
         
         for(let i=1; i<=4; i++) {
@@ -96,11 +102,11 @@
         document.querySelectorAll('.item-input').forEach(el => {
             if(el.value) data[el.dataset.key] = el.value;
         });
-        localStorage.setItem('warehouse_v2', JSON.stringify(data));
+        localStorage.setItem('warehouse_v3', JSON.stringify(data));
     }
 
     function loadData() {
-        const raw = localStorage.getItem('warehouse_v2');
+        const raw = localStorage.getItem('warehouse_v3');
         if(!raw) return;
         const data = JSON.parse(raw);
         document.querySelectorAll('.item-input').forEach(el => {
