@@ -1,134 +1,325 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>창고 관리 시스템 v3</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>퓨처스 창고 관리 시스템</title>
     <style>
-        :root { --primary: #2c3e50; --top-bg: #e8f5e9; --bot-bg: #fff3e0; --highlight: #ffeb3b; --border: #ccc; }
-        body { font-family: sans-serif; margin: 0; background: #f0f0f0; font-size: 12px; }
-        
-        /* 상단 검색바 */
-        .header { position: sticky; top: 0; background: #fff; padding: 10px; box-shadow: 0 1px 5px rgba(0,0,0,0.2); z-index: 100; }
-        .search-box { width: 100%; padding: 10px; border: 2px solid var(--primary); border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+      :root {
+        --primary: #2c3e50;
+        --top-bg: #e8f5e9;
+        --bot-bg: #fff3e0;
+        --highlight: #ffeb3b;
+        --border: #ccc;
+      }
+      body {
+        font-family: sans-serif;
+        margin: 0;
+        background: #f0f0f0;
+        font-size: 14px;
+        user-select: none;
+      }
 
-        .container { padding: 5px; }
-        .shelf-title { background: var(--primary); color: white; padding: 6px 10px; margin-top: 15px; border-radius: 4px 4px 0 0; font-weight: bold; font-size: 13px; }
+      /* 검색바 */
+      .header {
+        position: sticky;
+        top: 0;
+        background: #fff;
+        padding: 10px;
+        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+        z-index: 100;
+      }
+      .search-box {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid var(--primary);
+        border-radius: 8px;
+        box-sizing: border-box;
+        font-size: 16px;
+      }
 
-        /* 그리드 설정 */
-        .grid { display: grid; background: var(--border); gap: 1px; border: 1px solid var(--border); margin-bottom: 5px; }
-        .k-grid { grid-template-columns: repeat(5, 1fr); } 
-        .a-grid { grid-template-columns: repeat(4, 1fr); }
+      .container {
+        padding: 5px;
+        padding-bottom: 50px;
+      }
+      .shelf-title {
+        background: var(--primary);
+        color: white;
+        padding: 8px 10px;
+        margin-top: 15px;
+        border-radius: 4px 4px 0 0;
+        font-weight: bold;
+      }
 
-        .cell { background: white; padding: 4px 1px; display: flex; flex-direction: column; min-height: 80px; }
-        .cell-label { font-size: 9px; color: #666; text-align: center; margin-bottom: 3px; font-weight: bold; background: #f8f9fa; }
+      /* 그리드 레이아웃 */
+      .grid {
+        display: grid;
+        background: var(--border);
+        gap: 1px;
+        border: 1px solid var(--border);
+        margin-bottom: 5px;
+      }
+      .k-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+      .a-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
 
-        /* 입력창 */
-        .item-input { 
-            width: 100%; border: none; border-bottom: 1px solid #f0f0f0; 
-            padding: 3px 0; font-size: 11px; outline: none; text-align: center; background: transparent;
-        }
-        .item-input:focus { background: #fff; box-shadow: inset 0 0 2px var(--primary); }
-        .item-input::placeholder { color: #eee; }
+      /* 각 칸(Cell) 스타일 */
+      .cell {
+        background: white;
+        padding: 4px 1px;
+        min-height: 90px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+        cursor: pointer;
+      }
+      .cell:active {
+        background: #eee;
+      } /* 터치 피드백 */
+      .cell-label {
+        font-size: 9px;
+        color: #666;
+        text-align: center;
+        margin-bottom: 2px;
+        font-weight: bold;
+        background: #f8f9fa;
+        pointer-events: none;
+      }
 
-        /* 구역별 색상 구분 */
-        .zone-top { background-color: var(--top-bg) !important; } /* 맨 위층: 연녹색 */
-        .zone-bot { background-color: var(--bot-bg) !important; } /* 바닥: 연주황색 */
+      /* 메인 화면에서의 물품 요약 (글자가 길면 말줄임표 처리) */
+      .item-summary {
+        font-size: 10px;
+        line-height: 1.2;
+        height: 1.2em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 1px 2px;
+        border-bottom: 1px solid #f9f9f9;
+        color: #333;
+        pointer-events: none;
+      }
 
-        /* 검색 하이라이트 */
-        .found { background-color: var(--highlight) !important; border: 1px solid #fbc02d; z-index: 1; }
-        .found input { font-weight: bold; color: #000; }
+      /* 구역 색상 */
+      .zone-top {
+        background-color: var(--top-bg) !important;
+      }
+      .zone-bot {
+        background-color: var(--bot-bg) !important;
+      }
+      .found {
+        background-color: var(--highlight) !important;
+        border: 1.5px solid #fbc02d !important;
+        z-index: 1;
+      }
+
+      /* --- 모달(확대창) 스타일 --- */
+      #modalOverlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+      }
+      .modal-content {
+        background: white;
+        width: 90%;
+        max-width: 400px;
+        border-radius: 15px;
+        padding: 20px;
+        box-sizing: border-box;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      }
+      .modal-header {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 15px;
+        border-bottom: 2px solid var(--primary);
+        padding-bottom: 5px;
+      }
+      .modal-inputs {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .modal-input-item {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        box-sizing: border-box;
+      }
+      .btn-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+      }
+      .btn {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .btn-save {
+        background: var(--primary);
+        color: white;
+      }
+      .btn-close {
+        background: #ccc;
+        color: #333;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
+    <div class="header">
+      <input
+        type="text"
+        id="search"
+        class="search-box"
+        placeholder="🔍 물품 검색"
+        oninput="handleSearch()"
+      />
+    </div>
 
-<div class="header">
-    <input type="text" id="search" class="search-box" placeholder="🔍 물품 검색 (예: 레귤레이터)" oninput="handleSearch()">
-</div>
+    <div class="container">
+      <div class="shelf-title">케이씨 선반</div>
+      <div id="k-container" class="grid k-grid"></div>
 
-<div class="container">
-    <!-- K회사 -->
-    <div class="shelf-title">K회사 선반 (5열)</div>
-    <div id="k-container" class="grid k-grid"></div>
+      <div class="shelf-title">원익 선반</div>
+      <div id="a-container" class="grid a-grid"></div>
+    </div>
 
-    <!-- A회사 -->
-    <div class="shelf-title) ">A회사 선반 (4열)</div>
-    <div id="a-container" class="grid a-grid"></div>
-</div>
+    <!-- 상세 입력 모달 -->
+    <div id="modalOverlay">
+      <div class="modal-content">
+        <div id="modalTitle" class="modal-header">위치 정보</div>
+        <div class="modal-inputs">
+          <input type="text" class="modal-input-item" placeholder="물품 1" />
+          <input type="text" class="modal-input-item" placeholder="물품 2" />
+          <input type="text" class="modal-input-item" placeholder="물품 3" />
+          <input type="text" class="modal-input-item" placeholder="물품 4" />
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-close" onclick="closeModal()">취소</button>
+          <button class="btn btn-save" onclick="saveModal()">저장하기</button>
+        </div>
+      </div>
+    </div>
 
-<script>
-    const K_CONFIG = { id: 'k', rows: 3, cols: 5 };
-    const A_CONFIG = { id: 'a', rows: 3, cols: 4 };
+    <script>
+      const K_CONFIG = { id: "k", rows: 3, cols: 5 };
+      const A_CONFIG = { id: "a", rows: 3, cols: 4 };
+      let currentCellId = null;
+      let inventory = JSON.parse(localStorage.getItem("warehouse_v4") || "{}");
 
-    function initShelf(config) {
+      function initShelf(config) {
         const target = document.getElementById(`${config.id}-container`);
-        
-        // 1. 맨 위층 (TOP) - 열 개수만큼 생성
-        for(let c=1; c<=config.cols; c++) {
-            target.appendChild(createCell(`T-${c}`, `${config.id}-top-${c}`, 'zone-top'));
+        for (let c = 1; c <= config.cols; c++)
+          target.appendChild(
+            createCell(`T-${c}`, `${config.id}-top-${c}`, "zone-top"),
+          );
+        for (let r = 1; r <= config.rows; r++) {
+          for (let c = 1; c <= config.cols; c++)
+            target.appendChild(
+              createCell(`${r}-${c}`, `${config.id}-${r}-${c}`),
+            );
         }
+        for (let c = 1; c <= config.cols; c++)
+          target.appendChild(
+            createCell(`B-${c}`, `${config.id}-bot-${c}`, "zone-bot"),
+          );
+      }
 
-        // 2. 중간 선반 (1~3단)
-        for(let r=1; r<=config.rows; r++) {
-            for(let c=1; c<=config.cols; c++) {
-                target.appendChild(createCell(`${r}-${c}`, `${config.id}-${r}-${c}`));
-            }
-        }
-
-        // 3. 바닥 (BOTTOM) - 열 개수만큼 생성
-        for(let c=1; c<=config.cols; c++) {
-            target.appendChild(createCell(`B-${c}`, `${config.id}-bot-${c}`, 'zone-bot'));
-        }
-    }
-
-    function createCell(label, posId, extraClass = '') {
-        const div = document.createElement('div');
+      function createCell(label, posId, extraClass = "") {
+        const div = document.createElement("div");
         div.className = `cell ${extraClass}`;
+        div.id = `cell-${posId}`;
+        div.onclick = () => openModal(posId, label);
+
         div.innerHTML = `<span class="cell-label">${label}</span>`;
-        
-        for(let i=1; i<=4; i++) {
-            const input = document.createElement('input');
-            input.className = 'item-input';
-            input.placeholder = '.';
-            input.dataset.key = `${posId}-${i}`;
-            input.oninput = saveToLocal;
-            div.appendChild(input);
+        for (let i = 1; i <= 4; i++) {
+          const summary = document.createElement("div");
+          summary.className = "item-summary";
+          summary.id = `sum-${posId}-${i}`;
+          summary.innerText = inventory[`${posId}-${i}`] || "";
+          div.appendChild(summary);
         }
         return div;
-    }
+      }
 
-    function saveToLocal() {
-        const data = {};
-        document.querySelectorAll('.item-input').forEach(el => {
-            if(el.value) data[el.dataset.key] = el.value;
+      // 모달 열기
+      function openModal(posId, label) {
+        currentCellId = posId;
+        document.getElementById("modalTitle").innerText =
+          `📍 ${label} 위치 상세입력`;
+        const inputs = document.querySelectorAll(".modal-input-item");
+        inputs.forEach((input, index) => {
+          input.value = inventory[`${posId}-${index + 1}`] || "";
         });
-        localStorage.setItem('warehouse_v3', JSON.stringify(data));
-    }
+        document.getElementById("modalOverlay").style.display = "flex";
+        inputs[0].focus();
+      }
 
-    function loadData() {
-        const raw = localStorage.getItem('warehouse_v3');
-        if(!raw) return;
-        const data = JSON.parse(raw);
-        document.querySelectorAll('.item-input').forEach(el => {
-            if(data[el.dataset.key]) el.value = data[el.dataset.key];
+      // 모달 닫기
+      function closeModal() {
+        document.getElementById("modalOverlay").style.display = "none";
+      }
+
+      // 데이터 저장
+      function saveModal() {
+        const inputs = document.querySelectorAll(".modal-input-item");
+        inputs.forEach((input, index) => {
+          const key = `${currentCellId}-${index + 1}`;
+          const val = input.value.trim();
+          if (val) inventory[key] = val;
+          else delete inventory[key];
+
+          // 메인 화면 요약 업데이트
+          const sumEl = document.getElementById(`sum-${key}`);
+          if (sumEl) sumEl.innerText = val;
         });
-    }
+        localStorage.setItem("warehouse_v4", JSON.stringify(inventory));
+        closeModal();
+      }
 
-    function handleSearch() {
-        const word = document.getElementById('search').value.trim().toLowerCase();
-        document.querySelectorAll('.cell').forEach(c => c.classList.remove('found'));
-        if(!word) return;
-        document.querySelectorAll('.item-input').forEach(el => {
-            if(el.value.toLowerCase().includes(word)) {
-                el.closest('.cell').classList.add('found');
-            }
+      // 검색 기능 (긴 이름도 포함해서 검색)
+      function handleSearch() {
+        const word = document
+          .getElementById("search")
+          .value.trim()
+          .toLowerCase();
+        document
+          .querySelectorAll(".cell")
+          .forEach((c) => c.classList.remove("found"));
+        if (!word) return;
+
+        Object.keys(inventory).forEach((key) => {
+          if (inventory[key].toLowerCase().includes(word)) {
+            const posId = key.split("-").slice(0, -1).join("-");
+            const cell = document.getElementById(`cell-${posId}`);
+            if (cell) cell.classList.add("found");
+          }
         });
-    }
+      }
 
-    initShelf(K_CONFIG);
-    initShelf(A_CONFIG);
-    loadData();
-</script>
-
-</body>
+      initShelf(K_CONFIG);
+      initShelf(A_CONFIG);
+    </script>
+  </body>
 </html>
