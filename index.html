@@ -4,54 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>퓨처스 창고 관리 시스템</title>
-    <style>
-        :root { --primary: #2c3e50; --top-bg: #e8f5e9; --bot-bg: #fff3e0; --highlight: #ffeb3b; --border: #ccc; }
-        body { font-family: sans-serif; margin: 0; background: #f0f0f0; font-size: 14px; user-select: none; }
-        
-        /* 상단 검색 및 백업 바 */
-        .header { position: sticky; top: 0; background: #fff; padding: 10px; box-shadow: 0 1px 5px rgba(0,0,0,0.2); z-index: 100; }
-        .search-box { width: 100%; padding: 12px; border: 2px solid var(--primary); border-radius: 8px; box-sizing: border-box; font-size: 16px; margin-bottom: 8px; }
-        .backup-group { display: flex; gap: 5px; }
-        .btn-small { flex: 1; padding: 8px; font-size: 11px; border: 1px solid #ddd; border-radius: 4px; background: #f8f9fa; cursor: pointer; color: #555; }
-
-        .container { padding: 5px; padding-bottom: 80px; }
-        .shelf-title { background: var(--primary); color: white; padding: 8px 10px; margin-top: 15px; border-radius: 4px 4px 0 0; font-weight: bold; font-size: 13px; }
-
-        /* 그리드 레이아웃 */
-        .grid { display: grid; background: var(--border); gap: 1px; border: 1px solid var(--border); margin-bottom: 5px; }
-        .k-grid { grid-template-columns: repeat(5, 1fr); } 
-        .a-grid { grid-template-columns: repeat(4, 1fr); }
-        .c-grid { grid-template-columns: repeat(6, 1fr); }
-
-        .cell { background: white; padding: 4px 1px; min-height: 85px; display: flex; flex-direction: column; overflow: hidden; position: relative; cursor: pointer; }
-        .cell:active { background: #eee; }
-        .cell-label { font-size: 8px; color: #666; text-align: center; margin-bottom: 2px; font-weight: bold; background: #f8f9fa; }
-
-        .item-summary { font-size: 9px; line-height: 1.1; height: 1.1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 1px 2px; border-bottom: 1px solid #f9f9f9; color: #333; text-align: center; }
-
-        .zone-top { background-color: var(--top-bg) !important; }
-        .zone-bot { background-color: var(--bot-bg) !important; }
-        .found { background-color: var(--highlight) !important; border: 1.5px solid #fbc02d !important; z-index: 1; }
-
-        /* 모달 스타일 */
-        #modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: white; width: 92%; max-width: 400px; border-radius: 15px; padding: 20px; box-sizing: border-box; }
-        .modal-header { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid var(--primary); padding-bottom: 5px; }
-        .modal-inputs { display: flex; flex-direction: column; gap: 10px; }
-        .modal-input-item { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-        .btn { flex: 1; padding: 15px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; }
-        .btn-save { background: var(--primary); color: white; }
-        .btn-close { background: #ccc; color: #333; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="header">
-    <input type="text" id="search" class="search-box" placeholder="🔍 물품 검색 (K, A, C 전체)" oninput="handleSearch()">
+    <div class="search-container">
+        <input type="text" id="search" class="search-box" placeholder="🔍 물품 검색" oninput="onSearchInput()" autocomplete="off">
+        <!-- 추천 목록 -->
+        <div id="suggestionList" class="suggestion-list"></div>
+    </div>
     <div class="backup-group">
-        <button class="btn-small" onclick="exportData()">📤 전체백업 (데이터 복사)</button>
-        <button class="btn-small" onclick="importData()">📥 복구 (데이터 붙여넣기)</button>
+        <button class="btn-small" onclick="exportData()">📤 백업</button>
+        <button class="btn-small" onclick="importData()">📥 복구</button>
     </div>
 </div>
 
@@ -62,10 +27,11 @@
     <div class="shelf-title">🏢 원익 선반</div>
     <div id="a-container" class="grid a-grid"></div>
 
-    <div class="shelf-title">🏢 포이스&애드워드 등 선반</div>
+    <div class="shelf-title">🏢 포이스&에드워드 선반</div>
     <div id="c-container" class="grid c-grid"></div>
 </div>
 
+<!-- 상세 입력 모달 -->
 <div id="modalOverlay">
     <div class="modal-content">
         <div id="modalTitle" class="modal-header">위치 상세</div>
@@ -82,106 +48,6 @@
     </div>
 </div>
 
-<script>
-    const K_CONFIG = { id: 'k', rows: 3, cols: 5 };
-    const A_CONFIG = { id: 'a', rows: 3, cols: 4 };
-    const C_CONFIG = { id: 'c', rows: 3, cols: 6 };
-
-    let currentCellId = null;
-    // v5까지 썼던 데이터를 그대로 유지하기 위해 키 이름을 맞췄습니다.
-    let inventory = JSON.parse(localStorage.getItem('warehouse_v5') || '{}');
-
-    function initShelf(config) {
-        const target = document.getElementById(`${config.id}-container`);
-        if(!target) return;
-        for(let c=1; c<=config.cols; c++) target.appendChild(createCell(`T-${c}`, `${config.id}-top-${c}`, 'zone-top'));
-        for(let r=1; r<=config.rows; r++) {
-            for(let c=1; c<=config.cols; c++) target.appendChild(createCell(`${r}-${c}`, `${config.id}-${r}-${c}`));
-        }
-        for(let c=1; c<=config.cols; c++) target.appendChild(createCell(`B-${c}`, `${config.id}-bot-${c}`, 'zone-bot'));
-    }
-
-    function createCell(label, posId, extraClass = '') {
-        const div = document.createElement('div');
-        div.className = `cell ${extraClass}`;
-        div.id = `cell-${posId}`;
-        div.onclick = () => openModal(posId, label);
-        div.innerHTML = `<span class="cell-label">${label}</span>`;
-        for(let i=1; i<=4; i++) {
-            const summary = document.createElement('div');
-            summary.className = 'item-summary';
-            summary.id = `sum-${posId}-${i}`;
-            summary.innerText = inventory[`${posId}-${i}`] || '';
-            div.appendChild(summary);
-        }
-        return div;
-    }
-
-    function openModal(posId, label) {
-        currentCellId = posId;
-        document.getElementById('modalTitle').innerText = `📍 ${label} 상세입력`;
-        const inputs = document.querySelectorAll('.modal-input-item');
-        inputs.forEach((input, index) => {
-            input.value = inventory[`${posId}-${index + 1}`] || '';
-        });
-        document.getElementById('modalOverlay').style.display = 'flex';
-        inputs[0].focus();
-    }
-
-    function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
-
-    function saveModal() {
-        const inputs = document.querySelectorAll('.modal-input-item');
-        inputs.forEach((input, index) => {
-            const key = `${currentCellId}-${index + 1}`;
-            const val = input.value.trim();
-            if(val) inventory[key] = val;
-            else delete inventory[key];
-            const sumEl = document.getElementById(`sum-${key}`);
-            if(sumEl) sumEl.innerText = val;
-        });
-        localStorage.setItem('warehouse_v5', JSON.stringify(inventory));
-        closeModal();
-    }
-
-    function handleSearch() {
-        const word = document.getElementById('search').value.trim().toLowerCase();
-        document.querySelectorAll('.cell').forEach(c => c.classList.remove('found'));
-        if(!word) return;
-        Object.keys(inventory).forEach(key => {
-            if(inventory[key].toLowerCase().includes(word)) {
-                const posId = key.split('-').slice(0, -1).join('-');
-                const cell = document.getElementById(`cell-${posId}`);
-                if(cell) cell.classList.add('found');
-            }
-        });
-    }
-
-    // 백업 기능
-    function exportData() {
-        const data = localStorage.getItem('warehouse_v5');
-        if (!data || data === '{}') { alert("백업할 데이터가 없습니다."); return; }
-        navigator.clipboard.writeText(data).then(() => {
-            alert("전체 데이터가 복사되었습니다!\n카톡 '나와의 채팅' 등에 붙여넣어 보관하세요.");
-        });
-    }
-
-    // 복구 기능
-    function importData() {
-        const input = prompt("복사해두었던 데이터를 여기에 붙여넣으세요:");
-        if (input) {
-            try {
-                JSON.parse(input);
-                localStorage.setItem('warehouse_v5', input);
-                location.reload();
-            } catch (e) { alert("올바른 데이터 형식이 아닙니다."); }
-        }
-    }
-
-    initShelf(K_CONFIG);
-    initShelf(A_CONFIG);
-    initShelf(C_CONFIG);
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>

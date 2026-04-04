@@ -1,0 +1,214 @@
+:root {
+    --primary: #2c3e50;
+    --top-bg: #e8f5e9;
+    --bot-bg: #fff3e0;
+    --highlight: #ffeb3b;
+    --border: #ccc;
+}
+
+body {
+    font-family: sans-serif;
+    margin: 0;
+    background: #f0f0f0;
+    font-size: 14px;
+    user-select: none;
+}
+
+/* 상단 헤더 및 검색 */
+.header {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    padding: 10px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+    z-index: 100;
+}
+
+.search-container {
+    position: relative;
+    width: 100%;
+}
+
+.search-box {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--primary);
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+/* 추천 검색어 리스트 */
+.suggestion-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    display: none;
+    flex-direction: column;
+    z-index: 101;
+}
+
+.suggestion-item {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+}
+
+.suggestion-item:active {
+    background: #f0f0f0;
+}
+
+/* 버튼 그룹 */
+.backup-group {
+    display: flex;
+    gap: 5px;
+    margin-top: 8px;
+}
+
+.btn-small {
+    flex: 1;
+    padding: 8px;
+    font-size: 11px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #f8f9fa;
+    color: #555;
+}
+
+/* 선반 그리드 */
+.container {
+    padding: 5px;
+    padding-bottom: 80px;
+}
+
+.shelf-title {
+    background: var(--primary);
+    color: white;
+    padding: 8px 10px;
+    margin-top: 15px;
+    border-radius: 4px 4px 0 0;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.grid {
+    display: grid;
+    background: var(--border);
+    gap: 1px;
+    border: 1px solid var(--border);
+    margin-bottom: 5px;
+}
+
+.k-grid { grid-template-columns: repeat(5, 1fr); }
+.a-grid { grid-template-columns: repeat(4, 1fr); }
+.c-grid { grid-template-columns: repeat(6, 1fr); }
+
+.cell {
+    background: white;
+    padding: 4px 1px;
+    min-height: 85px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+.cell:active { background: #eee; }
+
+.cell-label {
+    font-size: 8px;
+    color: #666;
+    text-align: center;
+    margin-bottom: 2px;
+    font-weight: bold;
+    background: #f8f9fa;
+}
+
+.item-summary {
+    font-size: 9px;
+    line-height: 1.1;
+    height: 1.1em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 1px 2px;
+    border-bottom: 1px solid #f9f9f9;
+    color: #333;
+    text-align: center;
+}
+
+.zone-top { background-color: var(--top-bg) !important; }
+.zone-bot { background-color: var(--bot-bg) !important; }
+.found { background-color: var(--highlight) !important; border: 1.5px solid #fbc02d !important; z-index: 1; }
+
+/* 모달 상세창 */
+#modalOverlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    width: 92%;
+    max-width: 400px;
+    border-radius: 15px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.modal-header {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 5px;
+}
+
+.modal-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal-input-item {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+.btn-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.btn-save { background: var(--primary); color: white; }
+.btn-close { background: #ccc; color: #333; }
