@@ -47,6 +47,7 @@ function openModal(posId, label) {
 }
 
 function closeModal() {
+    document.getElementById('modalSuggestionList').style.display = 'none';
     document.getElementById('modalOverlay').style.display = 'none';
 }
 
@@ -140,7 +141,51 @@ initShelf(C_CONFIG);
 
 // 검색창 밖 터치 시 추천목록 닫기
 document.addEventListener('click', (e) => {
-    if(!e.target.closest('.search-container')) {
+    // 검색창 추천 리스트 닫기
+    if (!e.target.closest('.search-container')) {
         document.getElementById('suggestionList').style.display = 'none';
     }
+    // 모달창 추천 리스트 닫기
+    if (!e.target.closest('.modal-input-group')) {
+        document.getElementById('modalSuggestionList').style.display = 'none';
+    }
 });
+
+function onModalInput(inputEl) {
+    const word = inputEl.value.trim().toLowerCase();
+    const listEl = document.getElementById('modalSuggestionList');
+    listEl.innerHTML = '';
+
+    if (!word) {
+        listEl.style.display = 'none';
+        return;
+    }
+
+    // 현재 입력 중인 칸 바로 아래로 추천 리스트 이동
+    inputEl.parentNode.appendChild(listEl);
+
+    // 전체 데이터에서 중복 제거된 물품 목록 가져오기
+    const uniqueItems = [...new Set(Object.values(inventory))];
+    
+    // 현재 입력어와 일치하는 항목 찾기 (최대 5개)
+    const matches = uniqueItems
+        .filter(item => item.toLowerCase().includes(word))
+        .slice(0, 5);
+
+    if (matches.length > 0) {
+        listEl.style.display = 'flex';
+        matches.forEach(match => {
+            const item = document.createElement('div');
+            item.className = 'suggestion-item';
+            item.innerText = match;
+            item.onclick = (e) => {
+                e.stopPropagation();
+                inputEl.value = match; // 클릭한 추천어로 값 변경
+                listEl.style.display = 'none';
+            };
+            listEl.appendChild(item);
+        });
+    } else {
+        listEl.style.display = 'none';
+    }
+}

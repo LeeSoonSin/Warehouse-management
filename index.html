@@ -36,11 +36,21 @@
     <div class="modal-content">
         <div id="modalTitle" class="modal-header">위치 상세</div>
         <div class="modal-inputs">
-            <input type="text" class="modal-input-item" placeholder="물품 1">
-            <input type="text" class="modal-input-item" placeholder="물품 2">
-            <input type="text" class="modal-input-item" placeholder="물품 3">
-            <input type="text" class="modal-input-item" placeholder="물품 4">
+            <div class="modal-input-group">
+                <input type="text" class="modal-input-item" placeholder="물품 1" oninput="onModalInput(this)" autocomplete="off">
+            </div>
+            <div class="modal-input-group">
+                <input type="text" class="modal-input-item" placeholder="물품 2" oninput="onModalInput(this)" autocomplete="off">
+            </div>
+            <div class="modal-input-group">
+                <input type="text" class="modal-input-item" placeholder="물품 3" oninput="onModalInput(this)" autocomplete="off">
+            </div>
+            <div class="modal-input-group">
+                <input type="text" class="modal-input-item" placeholder="물품 4" oninput="onModalInput(this)" autocomplete="off">
+            </div>
         </div>
+        <div id="modalSuggestionList" class="suggestion-list"></div>
+
         <div class="btn-group">
             <button class="btn btn-close" onclick="closeModal()">취소</button>
             <button class="btn btn-save" onclick="saveModal()">저장</button>
