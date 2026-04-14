@@ -110,6 +110,7 @@ body {
 .k-grid { grid-template-columns: repeat(5, 1fr); }
 .a-grid { grid-template-columns: repeat(4, 1fr); }
 .c-grid { grid-template-columns: repeat(6, 1fr); }
+.d-grid { grid-template-columns: repeat(3, 1fr); }
 
 .cell {
     background: white;

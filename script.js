@@ -271,25 +271,27 @@ const ALIAS_MAP = {
 const K_CONFIG = { id: "k", rows: 3, cols: 5 };
 const A_CONFIG = { id: "a", rows: 3, cols: 4 };
 const C_CONFIG = { id: "c", rows: 3, cols: 6 };
+const D_CONFIG = { id: 'd', rows: 3, cols: 3, hasBottom: false };
 
 let currentCellId = null;
 let inventory = JSON.parse(localStorage.getItem("warehouse_v5") || "{}");
 
 function initShelf(config) {
-  const target = document.getElementById(`${config.id}-container`);
-  if (!target) return;
-  for (let c = 1; c <= config.cols; c++)
-    target.appendChild(
-      createCell(`T-${c}`, `${config.id}-top-${c}`, "zone-top"),
-    );
-  for (let r = 1; r <= config.rows; r++) {
-    for (let c = 1; c <= config.cols; c++)
-      target.appendChild(createCell(`${r}-${c}`, `${config.id}-${r}-${c}`));
-  }
-  for (let c = 1; c <= config.cols; c++)
-    target.appendChild(
-      createCell(`B-${c}`, `${config.id}-bot-${c}`, "zone-bot"),
-    );
+    const target = document.getElementById(`${config.id}-container`);
+    if(!target) return;
+
+    // TOP 생성
+    for(let c=1; c<=config.cols; c++) target.appendChild(createCell(`T-${c}`, `${config.id}-top-${c}`, 'zone-top'));
+    
+    // 중간 행 생성
+    for(let r=1; r<=config.rows; r++) {
+        for(let c=1; c<=config.cols; c++) target.appendChild(createCell(`${r}-${c}`, `${config.id}-${r}-${c}`));
+    }
+    
+    // BOTTOM 생성 (config.hasBottom이 true일 때만 생성)
+    if(config.hasBottom) {
+        for(let c=1; c<=config.cols; c++) target.appendChild(createCell(`B-${c}`, `${config.id}-bot-${c}`, 'zone-bot'));
+    }
 }
 
 function createCell(label, posId, extraClass = "") {
@@ -471,6 +473,7 @@ function importData() {
 initShelf(K_CONFIG);
 initShelf(A_CONFIG);
 initShelf(C_CONFIG);
+initShelf(D_CONFIG);
 
 document.addEventListener("click", (e) => {
   if (!e.target.closest(".search-container"))
