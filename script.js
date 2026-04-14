@@ -268,31 +268,43 @@ const ALIAS_MAP = {
   FTV0616: "VCDLWB-04T-PCR-DM-EP",
 };
 
-const K_CONFIG = { id: "k", rows: 3, cols: 5 };
-const A_CONFIG = { id: "a", rows: 3, cols: 4 };
-const C_CONFIG = { id: "c", rows: 3, cols: 6 };
+// 2. 선반 설정 (기존 코드에서 hasBottom: true를 명시적으로 추가했습니다)
+const K_CONFIG = { id: "k", rows: 3, cols: 5, hasBottom: true };
+const A_CONFIG = { id: "a", rows: 3, cols: 4, hasBottom: true };
+const C_CONFIG = { id: "c", rows: 3, cols: 6, hasBottom: true };
 const D_CONFIG = { id: 'd', rows: 3, cols: 3, hasBottom: false };
 
 let currentCellId = null;
 let inventory = JSON.parse(localStorage.getItem("warehouse_v5") || "{}");
 
+// 3. 선반 초기화 (더 안전하게 수정된 버전)
 function initShelf(config) {
     const target = document.getElementById(`${config.id}-container`);
     if(!target) return;
 
+    target.innerHTML = ''; // 화면을 새로 그릴 때 기존 잔상을 지웁니다.
+
     // TOP 생성
-    for(let c=1; c<=config.cols; c++) target.appendChild(createCell(`T-${c}`, `${config.id}-top-${c}`, 'zone-top'));
+    for(let c=1; c<=config.cols; c++) {
+        target.appendChild(createCell(`T-${c}`, `${config.id}-top-${c}`, 'zone-top'));
+    }
     
     // 중간 행 생성
     for(let r=1; r<=config.rows; r++) {
-        for(let c=1; c<=config.cols; c++) target.appendChild(createCell(`${r}-${c}`, `${config.id}-${r}-${c}`));
+        for(let c=1; c<=config.cols; c++) {
+            target.appendChild(createCell(`${r}-${c}`, `${config.id}-${r}-${c}`));
+        }
     }
     
-    // BOTTOM 생성 (config.hasBottom이 true일 때만 생성)
-    if(config.hasBottom) {
-        for(let c=1; c<=config.cols; c++) target.appendChild(createCell(`B-${c}`, `${config.id}-bot-${c}`, 'zone-bot'));
+    // BOTTOM 생성 (hasBottom이 명확히 true일 때만 생성)
+    if(config.hasBottom === true) {
+        for(let c=1; c<=config.cols; c++) {
+            target.appendChild(createCell(`B-${c}`, `${config.id}-bot-${c}`, 'zone-bot'));
+        }
     }
 }
+
+// --- 아래 createCell부터 마지막 이벤트 리스너까지는 보내주신 코드와 동일합니다 ---
 
 function createCell(label, posId, extraClass = "") {
   const div = document.createElement("div");
@@ -301,7 +313,6 @@ function createCell(label, posId, extraClass = "") {
   div.onclick = () => openModal(posId, label);
   div.innerHTML = `<span class="cell-label">${label}</span>`;
 
-  // UI에는 상위 4개 물품만 요약해서 보여줌 (요청사항)
   for (let i = 1; i <= 4; i++) {
     const summary = document.createElement("div");
     summary.className = "item-summary";
@@ -316,8 +327,6 @@ function openModal(posId, label) {
   currentCellId = posId;
   document.getElementById("modalTitle").innerText = `📍 ${label} 상세입력`;
   const inputs = document.querySelectorAll(".modal-input-item");
-
-  // 모달에 있는 6개의 입력창에 데이터를 채움
   inputs.forEach((input, index) => {
     input.value = inventory[`${posId}-${index + 1}`] || "";
   });
@@ -330,11 +339,8 @@ function saveModal() {
     const itemNumber = index + 1;
     const key = `${currentCellId}-${itemNumber}`;
     const val = input.value.trim();
-
     if (val) inventory[key] = val;
     else delete inventory[key];
-
-    // 메인 UI 요약본은 1~4번 물품일 때만 업데이트
     if (itemNumber <= 4) {
       const sumEl = document.getElementById(`sum-${key}`);
       if (sumEl) sumEl.innerText = val;
@@ -344,7 +350,6 @@ function saveModal() {
   closeModal();
 }
 
-// --- 이하 검색 및 자동완성 로직 (동일) ---
 function onSearchInput() {
   const word = document.getElementById("search").value.trim().toLowerCase();
   const listEl = document.getElementById("suggestionList");
@@ -354,24 +359,16 @@ function onSearchInput() {
     handleSearch("");
     return;
   }
-
   const uniqueItems = [...new Set(Object.values(inventory))];
-
-  // 동의어 사전에서도 검색어와 일치하는 '원래 이름'들을 후보에 추가
   let extraMatches = [];
   for (let alias in ALIAS_MAP) {
     if (alias.toLowerCase().includes(word)) {
       extraMatches.push(ALIAS_MAP[alias]);
     }
   }
-
   const allMatches = [...new Set([...uniqueItems, ...extraMatches])]
-    .filter(
-      (item) =>
-        item.toLowerCase().includes(word) || extraMatches.includes(item),
-    )
+    .filter((item) => item.toLowerCase().includes(word) || extraMatches.includes(item))
     .slice(0, 5);
-
   if (allMatches.length > 0) {
     listEl.style.display = "flex";
     allMatches.forEach((match) => {
@@ -394,16 +391,11 @@ function onSearchInput() {
 
 function handleSearch(word) {
   let query = word.toLowerCase().trim();
-  document
-    .querySelectorAll(".cell")
-    .forEach((c) => c.classList.remove("found"));
+  document.querySelectorAll(".cell").forEach((c) => c.classList.remove("found"));
   if (!query) return;
-
   const originalName = ALIAS_MAP[query] || query;
-
   Object.keys(inventory).forEach((key) => {
     const itemName = inventory[key].toLowerCase();
-    // 실제 저장된 이름에 검색어(또는 변환된 원래이름)가 포함되어 있는지 확인
     if (itemName.includes(query) || itemName.includes(originalName)) {
       const posId = key.split("-").slice(0, -1).join("-");
       const cell = document.getElementById(`cell-${posId}`);
@@ -422,9 +414,7 @@ function onModalInput(inputEl) {
   }
   inputEl.parentNode.appendChild(listEl);
   const uniqueItems = [...new Set(Object.values(inventory))];
-  const matches = uniqueItems
-    .filter((item) => item.toLowerCase().includes(word))
-    .slice(0, 5);
+  const matches = uniqueItems.filter((item) => item.toLowerCase().includes(word)).slice(0, 5);
   if (matches.length > 0) {
     listEl.style.display = "flex";
     matches.forEach((match) => {
@@ -470,6 +460,7 @@ function importData() {
   }
 }
 
+// 초기화 실행
 initShelf(K_CONFIG);
 initShelf(A_CONFIG);
 initShelf(C_CONFIG);
